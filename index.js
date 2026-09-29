@@ -52,7 +52,15 @@ async function getStats() {
 
     stats.totalCommits = user.contributionsCollection.totalCommitContributions;
     if (countAllCommits) {
-        stats.totalCommits = await totalCommitsFetcher(user.login, githubToken);
+        try {
+            stats.totalCommits = await totalCommitsFetcher(user.login, githubToken);
+        } catch (error) {
+            const status = error.response && error.response.status;
+            if (status !== 401 && status !== 403) {
+                throw error;
+            }
+            console.warn(`Could not fetch all-time commits (HTTP ${status}); falling back to past year commits count.`);
+        }
     }
 
     return stats;
